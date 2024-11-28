@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Image = System.Drawing.Image;
+using TextBox = System.Windows.Forms.TextBox;
 
 namespace My_paint
 {
@@ -296,10 +298,69 @@ namespace My_paint
             label7.BackColor = col;
         }
 
+        private void чернобелыйToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bmp = (Bitmap)pictureBox1.Image.Clone();
+            for (int i = 0; i<bmp.Width; ++i)
+            {
+                for (int j=0; j<bmp.Height;++j)
+                {
+                    UInt32 pixel = (UInt32)(bmp.GetPixel(i, j).ToArgb());
+                    // получаем компоненты цветов пикселя
+                    float R = (float)((pixel & 0x00FF0000) >> 16); // красный
+                    float G = (float)((pixel & 0x0000FF00) >> 8); // зеленый
+                    float B = (float)(pixel & 0x000000FF); // синий
+                                                           // делаем цвет черно-белым (оттенки серого) - находим среднее арифметическое
+                    R = G = B = (R + G + B) / 3.0f;
+                    // собираем новый пиксель по частям (по каналам)
+                    UInt32 newPixel = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
+                    bmp.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                }
+            }
+            pictureBox1.Image = (Bitmap)bmp.Clone();
+            buf.Push((Bitmap)pictureBox1.Image.Clone());
+            ToBufer(buf.Count);
+        }
+
         private void button8_Click(object sender, EventArgs e)
         {
             intr = 6;
             border = col;
+        }
+
+        private void сохранитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            save_new();
+        }
+
+        private void сепияToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bmp = (Bitmap)pictureBox1.Image.Clone();
+            for (int i = 0; i < bmp.Width; ++i)
+            {
+                for (int j = 0; j < bmp.Height; ++j)
+                {
+                    UInt32 pixel = (UInt32)(bmp.GetPixel(i, j).ToArgb());
+                    float R = (float)((pixel & 0x00FF0000) >> 16); // красный
+                    float G = (float)((pixel & 0x0000FF00) >> 8);  // зеленый
+                    float B = (float)(pixel & 0x000000FF);         // синий
+                    int grayScale = (int)((R * .3) + (G * .59) + (B * .11));
+
+                    // create the color object
+                    Color newColor = Color.FromArgb(grayScale, grayScale, grayScale);
+
+                    // now apply a sepia filter
+                    R = newColor.R * 1;
+                    G = newColor.G * 0.95f;
+                    B = newColor.B * 0.82f;
+
+                    UInt32 newPixel = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
+                    bmp.SetPixel(i, j, Color.FromArgb((int)newPixel));
+                }
+            }
+            pictureBox1.Image = (Bitmap)bmp.Clone();
+            buf.Push((Bitmap)pictureBox1.Image.Clone());
+            ToBufer(buf.Count);
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
@@ -561,25 +622,6 @@ namespace My_paint
             pictureBox1.Width=pictureBox1.Width+e.X-pictureBox1.Location.X;
         }
 
-        void filling(int x, int y)
-        {
-
-            if (bmp.GetPixel(x, y) == fill_col)
-            {
-                if (ifpixelcol(x, y, col))
-                    bmp.SetPixel(x, y, col);
-
-                if (y > 0)
-                    filling(x, y - 1);
-                if (x + 1 < bmp.Width)
-                    filling(x + 1, y);
-                if (y + 1 > bmp.Height)
-                    filling(x, y + 1);
-                if (x > 0)
-                    filling(x - 1, y);
-            }
-
-        }
 
         private Bitmap filling(Bitmap sourceImage, int x, int y, Color fillColor, Color borderColor)
         {
@@ -653,6 +695,9 @@ namespace My_paint
                     MessageBox.Show("Невозможно открыть изображение", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+
+            buf.Push((Bitmap)pictureBox1.Image.Clone());
+            ToBufer(buf.Count);
         }
         public void save()
         {
@@ -678,6 +723,37 @@ namespace My_paint
                     }
                 }
 
+            }
+        }
+
+        public void save_new()
+        {
+            if (pictureBox1.Image != null)
+            {
+                try
+                {
+                    // Путь к рабочему столу
+                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+                    // Фиксированное имя файла
+                    string filePath = Path.Combine(desktopPath, "SavedImage.png");
+
+                    // Сохраняем изображение в формате PNG
+                    pictureBox1.Image.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+
+                    MessageBox.Show("Изображение сохранено на рабочий стол: " + filePath,
+                                    "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Невозможно сохранить изображение: " + ex.Message,
+                                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Нет изображения для сохранения.",
+                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -707,48 +783,6 @@ namespace My_paint
             return (Image)(new Bitmap(imgToResize, size));
         }
 
-        bool ifpixelcol(int x, int y, Color c) {
-            if (x+2 < bmp.Width)
-            {
-                if(bmp.GetPixel(x + 1, y) == c) 
-                    return true;
-            }
-            if (x >0)
-            {
-                if (bmp.GetPixel(x-1, y) == c)
-                    return true;
-            }
-            if (y+2 < bmp.Height)
-            {
-                if (bmp.GetPixel(x, y+1) == c)
-                    return true;
-            }
-            if (y > 0)
-            {
-                if (bmp.GetPixel(x, y-1) == c)
-                    return true;
-            }
-            return false;
-        }
-
-        void firstfill(int x, int y)
-        {
-            int i = 0;
-            while(true)
-            {
-                if ((y - 1 > 0) && (bmp.GetPixel(x, y - i) == fill_col))
-                {
-                    ++i;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            filling(x, y - i);
-        }
     }
-
 
 }
