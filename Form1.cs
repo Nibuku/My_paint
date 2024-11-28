@@ -61,8 +61,8 @@ namespace My_paint
         private Point mousePos2;
         private DraggedFragment draggedFragment;
         static Pen cont = new Pen(col, 2);
-
-        static Color col = Color.Black, ncol = Color.Black;
+        private Bitmap image;
+        static Color col = Color.Black, ncol = Color.Black, fill_col=Color.White, border;
         static Pen pen = new Pen(col, 1);
         int pen_size = 1;
         int x1, y1;
@@ -70,7 +70,7 @@ namespace My_paint
         int intr;
         static Stack<Bitmap> buf = new Stack<Bitmap>();
         static Stack<Bitmap> buf2 = new Stack<Bitmap>();
-
+        Graphics g;
         Point[] resize_point = new Point[8];
         bool[] resize=new bool[8];
         public Form1()
@@ -299,6 +299,7 @@ namespace My_paint
         private void button8_Click(object sender, EventArgs e)
         {
             intr = 6;
+            border = col;
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
@@ -397,6 +398,18 @@ namespace My_paint
                     pictureBox1.Invalidate();
                 }
             }
+            else if (intr==6)
+            {
+                risch = false;
+                g= Graphics.FromImage(bmp);
+                colbitmap= new Bitmap(pictureBox1.Image);
+                float stretch_x = colbitmap.Width / (float)pictureBox1.Width;
+                float stretch_y = colbitmap.Height / (float)pictureBox1.Height;
+                fill_col = colbitmap.GetPixel((int)(e.X * stretch_x), (int)(e.Y * stretch_y));
+                bmp = filling(bitmap, e.X, e.Y, col, border);
+                pictureBox1.Image=(Bitmap)bmp.Clone();  
+            }
+            else risch = true;
 
         }
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
@@ -509,47 +522,6 @@ namespace My_paint
             graph.DrawEllipse(pen, x1, y1, x2, y2);
             pictureBox1.Image = bmp;
         }
-
-        void select(int x1, int y1, int x2, int y2)
-        {
-            if (risch)
-            {
-                int tmp;
-                bmp = (Bitmap)bitmap.Clone();
-                Graphics graph = Graphics.FromImage(bmp);
-                Pen pen = new Pen(Color.Blue, 1);
-                pen.DashStyle = DashStyle.Dash;
-                if (x2 < x1)
-                {
-                    tmp = x1;
-                    x1 = x2;
-                    x2 = tmp;
-                    x2 -= x1;
-                }
-                else
-                {
-                    x2 -= x1;
-                }
-                if (y2 < y1)
-                {
-                    tmp = y1;
-                    y1 = y2;
-                    y2 = tmp;
-                    y2 -= y1;
-                }
-                else
-                {
-                    y2 -= y1;
-                }
-                graph.DrawRectangle(pen, x1, y1, x2, y2);
-                pictureBox1.Image = bmp;
-            }
-            else
-            {
-                pictureBox1.Image=bitmap;
-            }
-        }
-
         void draw_resize()
         {
             Graphics graph = panel2.CreateGraphics();
@@ -589,6 +561,73 @@ namespace My_paint
             pictureBox1.Width=pictureBox1.Width+e.X-pictureBox1.Location.X;
         }
 
+        void filling(int x, int y)
+        {
+
+            if (bmp.GetPixel(x, y) == fill_col)
+            {
+                if (ifpixelcol(x, y, col))
+                    bmp.SetPixel(x, y, col);
+
+                if (y > 0)
+                    filling(x, y - 1);
+                if (x + 1 < bmp.Width)
+                    filling(x + 1, y);
+                if (y + 1 > bmp.Height)
+                    filling(x, y + 1);
+                if (x > 0)
+                    filling(x - 1, y);
+            }
+
+        }
+
+        private Bitmap filling(Bitmap sourceImage, int x, int y, Color fillColor, Color borderColor)
+        {
+            Bitmap image = (Bitmap)sourceImage.Clone();
+            Stack<Point> points = new Stack<Point>();
+            points.Push(new Point(x, y));
+
+            // Проверяем, что начальная точка внутри изображения
+            if (x < 0 || x >= image.Width || y < 0 || y >= image.Height)
+                return image;
+
+            // Получаем исходный цвет заливки (чтобы не перезаполнять область)
+            Color targetColor = image.GetPixel(x, y);
+            if (targetColor.ToArgb() == fillColor.ToArgb() || targetColor.ToArgb() == borderColor.ToArgb())
+                return image;
+
+            while (points.Count > 0)
+            {
+                Point currentPoint = points.Pop();
+
+                int px = currentPoint.X;
+                int py = currentPoint.Y;
+
+                // Проверяем, что текущая точка внутри изображения
+                if (px < 0 || px >= image.Width || py < 0 || py >= image.Height)
+                    continue;
+
+                // Получаем текущий цвет пикселя
+                Color currentColor = image.GetPixel(px, py);
+
+                // Если пиксель не подходит для заливки, пропускаем его
+                if (currentColor.ToArgb() == fillColor.ToArgb() || currentColor.ToArgb() == borderColor.ToArgb())
+                    continue;
+
+                // Закрашиваем текущий пиксель
+                image.SetPixel(px, py, fillColor);
+
+                // Добавляем соседние пиксели в стек
+                points.Push(new Point(px, py + 1)); // Вверх
+                points.Push(new Point(px + 1, py)); // Вправо
+                points.Push(new Point(px, py - 1)); // Вниз
+                points.Push(new Point(px - 1, py)); // Влево
+            }
+
+            return image;
+        }
+
+
         /////////////////////////////////////////////////////////////////////////////////////
         /// работа с файлами
 
@@ -615,8 +654,6 @@ namespace My_paint
                 }
             }
         }
-
-
         public void save()
         {
             if (pictureBox1.Image != null)
@@ -653,19 +690,6 @@ namespace My_paint
                 return false;
             }
         }
-
-        public Point[] bezier(Point[] point)
-        {
-            Point[] t = new Point[2];
-            t[0]= new Point(0,0);
-            t[1]= new Point(0,0);
-            t[0].X = (point[0].X + point[1].X) / 2;
-            t[0].Y= (point[0].Y + point[1].Y) / 2;
-            t[1].X = (point[0].X + point[1].X) / 2;
-            t[1].Y = (point[0].Y + point[1].Y) / 2;
-            return t;
-        }
-
         public void ToBufer(int i)
         {
             PictureBox pic = new PictureBox();
@@ -681,6 +705,48 @@ namespace My_paint
         public static Image resizeImage(Image imgToResize, Size size)
         {
             return (Image)(new Bitmap(imgToResize, size));
+        }
+
+        bool ifpixelcol(int x, int y, Color c) {
+            if (x+2 < bmp.Width)
+            {
+                if(bmp.GetPixel(x + 1, y) == c) 
+                    return true;
+            }
+            if (x >0)
+            {
+                if (bmp.GetPixel(x-1, y) == c)
+                    return true;
+            }
+            if (y+2 < bmp.Height)
+            {
+                if (bmp.GetPixel(x, y+1) == c)
+                    return true;
+            }
+            if (y > 0)
+            {
+                if (bmp.GetPixel(x, y-1) == c)
+                    return true;
+            }
+            return false;
+        }
+
+        void firstfill(int x, int y)
+        {
+            int i = 0;
+            while(true)
+            {
+                if ((y - 1 > 0) && (bmp.GetPixel(x, y - i) == fill_col))
+                {
+                    ++i;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            filling(x, y - i);
         }
     }
 
