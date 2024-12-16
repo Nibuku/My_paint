@@ -47,15 +47,16 @@ namespace My_paint
                     //рисуем сдвинутый фрагмент
                     gr.SetClip(Rect);
                     gr.DrawImage(clone, Location.X - SourceRect.X, Location.Y - SourceRect.Y);
+                    
                 }
             }
 
         }
 
         Point p1, p2;
-
+        private string userText;
         static Color c1 = Color.Crimson, c2 = Color.White, zal;
-        Boolean risch, chcol;
+        Boolean risch, chcol, fail;
         Point oldMouse;
         int x2, y2, x3, y3, x4, y4;
         static Point[] gpoint;
@@ -63,18 +64,21 @@ namespace My_paint
         private Point mousePos2;
         private DraggedFragment draggedFragment;
         static Pen cont = new Pen(col, 2);
-        private Bitmap image;
+        public static Bitmap image;
         static Color col = Color.Black, ncol = Color.Black, fill_col=Color.White, border;
         static Pen pen = new Pen(col, 1);
         int pen_size = 1;
         int x1, y1;
-        static Bitmap nbmp, bitmap, bmp, colbitmap;
+        public static Bitmap nbmp, bitmap, bmp, colbitmap;
         int intr;
-        static Stack<Bitmap> buf = new Stack<Bitmap>();
+        private int textSize = 16;
+        public static Stack<Bitmap> buf = new Stack<Bitmap>();
         static Stack<Bitmap> buf2 = new Stack<Bitmap>();
         Graphics g;
         Point[] resize_point = new Point[8];
         bool[] resize=new bool[8];
+        public static UInt32[,] pixel;
+        public static string full_name_of_image = "\0";
         public Form1()
         {
             InitializeComponent();
@@ -84,6 +88,7 @@ namespace My_paint
             pictureBox1.Image = btm;
             buf.Push(btm);
             intr = 1;
+
         }
 
 
@@ -219,11 +224,11 @@ namespace My_paint
                 draw_resize();
         }
 
-        private void button7_Click(object sender, EventArgs e)
-        {
-            intr = 5;
-            draw_resize();
-        }
+       // private void button7_Click(object sender, EventArgs e)
+        //{
+            //intr = 5;
+           // draw_resize();
+        //}
 
         private void pictureBox2_MouseClick(object sender, MouseEventArgs e)
         {
@@ -363,8 +368,16 @@ namespace My_paint
             ToBufer(buf.Count);
         }
 
+        public static void FromPixelToBitmap()
+        {
+            for (int y = 0; y < image.Height; y++)
+                for (int x = 0; x < image.Width; x++)
+                    image.SetPixel(x, y, Color.FromArgb((int)pixel[y, x]));
+        }
+
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
+            
             //если есть сдвигаемый фрагмент
             if (draggedFragment != null)
             {
@@ -386,6 +399,18 @@ namespace My_paint
                 if (mousePos1 != mousePos2)
                     ControlPaint.DrawFocusRectangle(e.Graphics, GetRect(mousePos1, mousePos2));//рисуем рамку
             }
+            
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            intr = 7;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            userText = textBox3.Text;
+            intr = 11;
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -428,6 +453,16 @@ namespace My_paint
                         {
                             mousePos1 = mousePos2 = e.Location;
                         }
+                        
+                        break;
+                    case 7:
+                        draw_polygon(oldMouse.X, oldMouse.Y, e.X, e.Y);
+                        break;
+                    case 11:
+                        if (!string.IsNullOrEmpty(userText)) // Если текст установлен
+                        {
+                            draw_text(userText, e.X, e.Y); // Рисуем текст по координатам клика
+                        }
                         break;
 
                 }
@@ -437,6 +472,20 @@ namespace My_paint
                 y1 = e.Y;
             }
         }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            if (fontDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                textBox3.Font = fontDialog1.Font;
+        }
+
+        private void каналыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
+            Form2 ColorBalanceForm = new Form2(this);
+            ColorBalanceForm.ShowDialog();
+        }
+
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
             buf2.Clear();
@@ -457,6 +506,7 @@ namespace My_paint
                     //уничтожаем фрагмент
                     draggedFragment = null;
                     pictureBox1.Invalidate();
+                    
                 }
             }
             else if (intr==6)
@@ -468,11 +518,45 @@ namespace My_paint
                 float stretch_y = colbitmap.Height / (float)pictureBox1.Height;
                 fill_col = colbitmap.GetPixel((int)(e.X * stretch_x), (int)(e.Y * stretch_y));
                 bmp = filling(bitmap, e.X, e.Y, col, border);
-                pictureBox1.Image=(Bitmap)bmp.Clone();  
+                pictureBox1.Image=(Bitmap)bmp.Clone();
+                
             }
-            else risch = true;
+            //else risch = true;
 
         }
+
+        private void яркостьКонтрастностьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form3 BrightnessForm = new Form3(this);
+            BrightnessForm.ShowDialog();
+        }
+
+        private void повышениеРезкостиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (full_name_of_image != "\0")
+            {
+                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N1, Filter.sharpness);
+                FromPixelToBitmap();
+                FromBitmapToScreen();
+                pictureBox1.Image = (Bitmap)image.Clone();
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
+            }
+        }
+
+        private void размытьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (full_name_of_image != "\0")
+            {
+                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N2, Filter.blur);
+                FromPixelToBitmap();
+                FromBitmapToScreen();
+                pictureBox1.Image = (Bitmap)image.Clone();
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
+            }
+        }
+
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
             if (intr == 4)
@@ -486,17 +570,17 @@ namespace My_paint
                 }
                 else
                 {
-                    //пользователь сдвинул фрагмент и отпутил мышь?
                     if (draggedFragment != null)
                     {
-                        //фиксируем изменения в исходном изображении
                         draggedFragment.Fix(pictureBox1.Image);
-                        //уничтожаем фрагмент
                         draggedFragment = null;
                         mousePos1 = mousePos2 = e.Location;
                     }
                 }
                 pictureBox1.Invalidate();
+                risch = false;
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
             }
             else { 
                 pictureBox1.Image = (Bitmap)bmp.Clone();
@@ -582,6 +666,51 @@ namespace My_paint
             }
             graph.DrawEllipse(pen, x1, y1, x2, y2);
             pictureBox1.Image = bmp;
+        }
+
+        void draw_polygon(int x1, int y1, int x2, int y2)
+        {
+            bmp = (Bitmap)bitmap.Clone();
+            Graphics graph = Graphics.FromImage(bmp);
+            Pen pen = new Pen(col, pen_size);
+
+            if (x2 < x1)
+            {
+                int tmp = x1;
+                x1 = x2;
+                x2 = tmp;
+            }
+
+            if (y2 < y1)
+            {
+                int tmp = y1;
+                y1 = y2;
+                y2 = tmp;
+            }
+
+            // Расчёт координат третьей вершины
+            int x3 = x1 + (x2 - x1) / 2; 
+            int y3 = y1 - (y2 - y1); 
+
+            Point[] trianglePoints = new Point[]
+            {
+            new Point(x1, y2),
+            new Point(x2, y2), 
+            new Point(x3, y3) 
+            };
+
+            graph.DrawPolygon(pen, trianglePoints);
+
+            pictureBox1.Image = bmp;
+        }
+
+        void draw_text(string text, int x, int y)
+        {
+            bmp = (Bitmap)bitmap.Clone(); 
+            Graphics graph = Graphics.FromImage(bmp);
+            Brush brush = new SolidBrush(col);
+            graph.DrawString(text, textBox3.Font, brush, x, y); 
+            pictureBox1.Image = bmp; 
         }
         void draw_resize()
         {
@@ -674,30 +803,41 @@ namespace My_paint
         /// работа с файлами
 
         public void open()
-        { OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Открыть файл";
-            ofd.CheckFileExists = true;
-            ofd.CheckPathExists = true; 
-            ofd.Filter= "BMP Files (*.bmp)|*.bmp|" +
-                 "JPEG Files (*.jpg;*.jpeg)|*.jpg;*.jpeg|" +
-                 "GIF Files (*.gif)|*.gif|" +
-                 "PNG Files (*.png)|*.png|" +
-                 "All Files (*.*)|*.*";
-            ofd.ShowHelp= true;
-            if (ofd.ShowDialog() == DialogResult.OK)
+        {
+            OpenFileDialog open_dialog = new OpenFileDialog();
+            open_dialog.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
+            if (open_dialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    pictureBox1.Image = new Bitmap(ofd.FileName);
+                    full_name_of_image = open_dialog.FileName;
+                    image = new Bitmap(open_dialog.FileName);
+                    //this.pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+                    //this.Width = pictureBox1.Width;
+                    //this.Height = pictureBox1.Height;
+                    //this.pictureBox1.Size = image.Size;
+                    pictureBox1.Image = image;
+                    pictureBox1.Invalidate(); //????
+                    //получение матрицы с пикселями
+                    pixel = new UInt32[image.Height, image.Width];
+                    for (int y = 0; y < image.Height; y++)
+                        for (int x = 0; x < image.Width; x++)
+                            pixel[y, x] = (UInt32)(image.GetPixel(x, y).ToArgb());
+                    float f_x = image.Width / (float)pictureBox1.Width;
+                    float f_y = image.Height / (float)pictureBox1.Height;
+
                 }
                 catch
                 {
-                    MessageBox.Show("Невозможно открыть изображение", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    full_name_of_image = "\0";
+                    DialogResult rezult = MessageBox.Show("Невозможно открыть выбранный файл",
+                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
+                pictureBox1.Image = (Bitmap)image.Clone();
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
 
-            buf.Push((Bitmap)pictureBox1.Image.Clone());
-            ToBufer(buf.Count);
+            }
         }
         public void save()
         {
@@ -782,6 +922,20 @@ namespace My_paint
         {
             return (Image)(new Bitmap(imgToResize, size));
         }
+
+        public void FromBitmapToScreen()
+        {
+            pictureBox1.Image = image;
+            bmp = (Bitmap)image.Clone();
+            buf.Push((Bitmap)pictureBox1.Image.Clone());
+            ToBufer(buf.Count);
+        }
+
+        public static void FromOnePixelToBitmap(int x, int y, UInt32 pixel)
+        {
+            image.SetPixel(y, x, Color.FromArgb((int)pixel));
+        }
+
 
     }
 
