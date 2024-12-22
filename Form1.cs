@@ -15,6 +15,7 @@ using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Image = System.Drawing.Image;
 using TextBox = System.Windows.Forms.TextBox;
+using ToolTip = System.Windows.Forms.ToolTip;
 
 namespace My_paint
 {
@@ -25,16 +26,14 @@ namespace My_paint
     {
         class DraggedFragment
         {
-            public Rectangle SourceRect;//прямоугольник фрагмента в исходном изображении
-            public Point Location;//положение сдвинутого фрагмента
+            public Rectangle SourceRect;
+            public Point Location;
 
-            //прямоугольник сдвинутого фрагмента
             public Rectangle Rect
             {
                 get { return new Rectangle(Location, SourceRect.Size); }
             }
 
-            //фиксация изменений в исх изображении
             public void Fix(Image image)
             {
                 using (var clone = (Image)image.Clone())
@@ -88,6 +87,8 @@ namespace My_paint
             pictureBox1.Image = btm;
             buf.Push(btm);
             intr = 1;
+
+            Form1_Load(null, null);
 
         }
 
@@ -216,20 +217,6 @@ namespace My_paint
             intr = 4;
         }
 
-        private void panel2_Resize(object sender, EventArgs e)
-        {
-            pictureBox1.Left = (panel2.Width - pictureBox1.Width) / 2;
-            pictureBox1.Top = (panel2.Height - pictureBox1.Height) / 2;
-            if (intr == 5)
-                draw_resize();
-        }
-
-       // private void button7_Click(object sender, EventArgs e)
-        //{
-            //intr = 5;
-           // draw_resize();
-        //}
-
         private void pictureBox2_MouseClick(object sender, MouseEventArgs e)
         {
             float stretch_x = colbitmap.Width / (float)pictureBox2.Width;
@@ -242,45 +229,6 @@ namespace My_paint
             trackBar5.Value = (col.R + col.B + col.G) / 3;
             ncol = col;
             label7.BackColor = col;
-        }
-
-        private void panel2_Paint(object sender, PaintEventArgs e)
-        {
-                pictureBox1.Left = (panel2.Width - pictureBox1.Width) / 2;
-                pictureBox1.Top = (panel2.Height - pictureBox1.Height) / 2;
-            if ( intr==5)
-                draw_resize();
-
-        }
-
-        private void panel2_MouseMove(object sender, MouseEventArgs e)
-        {   if (intr == 5)
-            {
-                    if (inPoint(e, resize_point[0]) || inPoint(e, resize_point[7]))
-                    {
-                        this.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
-                    }
-                    else if (inPoint(e, resize_point[2]) || inPoint(e, resize_point[5]))
-                    {
-                    this.Cursor = System.Windows.Forms.Cursors.SizeNESW;
-                    }
-                    else if (inPoint(e, resize_point[1]) || inPoint(e, resize_point[6]))
-                    {
-                    this.Cursor = System.Windows.Forms.Cursors.SizeWE;
-                    }
-                    else if (inPoint(e, resize_point[3]) || inPoint(e, resize_point[4]))
-                    {
-                    this.Cursor = System.Windows.Forms.Cursors.SizeNS;
-                    resize[4] = true;
-                    }
-                    else
-                    {
-                    this.Cursor=System.Windows.Forms.Cursors.Default;
-                     }
-
-            }
-            if (resize[4] == true)
-                holst_resize(e);
         }
 
         private void pictureBox2_MouseMove(object sender, MouseEventArgs e)
@@ -312,12 +260,11 @@ namespace My_paint
                 {
                     UInt32 pixel = (UInt32)(bmp.GetPixel(i, j).ToArgb());
                     // получаем компоненты цветов пикселя
-                    float R = (float)((pixel & 0x00FF0000) >> 16); // красный
-                    float G = (float)((pixel & 0x0000FF00) >> 8); // зеленый
-                    float B = (float)(pixel & 0x000000FF); // синий
-                                                           // делаем цвет черно-белым (оттенки серого) - находим среднее арифметическое
+                    float R = (float)((pixel & 0x00FF0000) >> 16); 
+                    float G = (float)((pixel & 0x0000FF00) >> 8); 
+                    float B = (float)(pixel & 0x000000FF);
+                                                          
                     R = G = B = (R + G + B) / 3.0f;
-                    // собираем новый пиксель по частям (по каналам)
                     UInt32 newPixel = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
                     bmp.SetPixel(i, j, Color.FromArgb((int)newPixel));
                 }
@@ -346,9 +293,9 @@ namespace My_paint
                 for (int j = 0; j < bmp.Height; ++j)
                 {
                     UInt32 pixel = (UInt32)(bmp.GetPixel(i, j).ToArgb());
-                    float R = (float)((pixel & 0x00FF0000) >> 16); // красный
-                    float G = (float)((pixel & 0x0000FF00) >> 8);  // зеленый
-                    float B = (float)(pixel & 0x000000FF);         // синий
+                    float R = (float)((pixel & 0x00FF0000) >> 16);
+                    float G = (float)((pixel & 0x0000FF00) >> 8);  
+                    float B = (float)(pixel & 0x000000FF);     
                     int grayScale = (int)((R * .3) + (G * .59) + (B * .11));
 
                     // create the color object
@@ -395,9 +342,8 @@ namespace My_paint
             }
             else
             {
-                //если выделена область
                 if (mousePos1 != mousePos2)
-                    ControlPaint.DrawFocusRectangle(e.Graphics, GetRect(mousePos1, mousePos2));//рисуем рамку
+                    ControlPaint.DrawFocusRectangle(e.Graphics, GetRect(mousePos1, mousePos2));
             }
             
         }
@@ -503,7 +449,6 @@ namespace My_paint
                 //юзер кликнул мышью мимо фрагмента?
                 if (draggedFragment != null && !draggedFragment.Rect.Contains(e.Location))
                 {
-                    //уничтожаем фрагмент
                     draggedFragment = null;
                     pictureBox1.Invalidate();
                     
@@ -521,7 +466,6 @@ namespace My_paint
                 pictureBox1.Image=(Bitmap)bmp.Clone();
                 
             }
-            //else risch = true;
 
         }
 
@@ -712,44 +656,7 @@ namespace My_paint
             graph.DrawString(text, textBox3.Font, brush, x, y); 
             pictureBox1.Image = bmp; 
         }
-        void draw_resize()
-        {
-            Graphics graph = panel2.CreateGraphics();
-            graph.Clear(panel2.BackColor);
-            int x1, x2, x3, y1, y2, y3, x, y;
-            x=pictureBox1.Location.X-2;
-            y = pictureBox1.Location.Y-2;
-            x1 = x; 
-            y1 = y;
-            x2 = pictureBox1.Width / 2+x;
-            y2 = pictureBox1.Height/2+y;
-            x3 = pictureBox1.Width+x;
-            y3 = pictureBox1.Height+y;
-            resize_point[0] =new Point(x1, y1);
-            resize_point[1] = new Point(x1, y2);
-            resize_point[2] = new Point(x1, y3);
-            resize_point[3] = new Point(x2, y1);
-            resize_point[4] = new Point(x2, y3);
-            resize_point[5] = new Point(x3, y1);
-            resize_point[6] = new Point(x3, y2);
-            resize_point[7] = new Point(x3, y3);
 
-            Pen pen = new Pen(Color.Gray, 3);
-            graph.DrawRectangle(pen, x1, y1, 3, 3);
-            graph.DrawRectangle(pen, x1, y2, 3, 3);
-            graph.DrawRectangle(pen, x1, y3, 3, 3);
-            graph.DrawRectangle(pen, x2, y1, 3, 3);
-            graph.DrawRectangle(pen, x2, y3, 3, 3);
-            graph.DrawRectangle(pen, x3, y1, 3, 3);
-            graph.DrawRectangle(pen, x3, y2, 3, 3);
-            graph.DrawRectangle(pen, x3, y3, 3, 3);
-            //pictureBox1.Image = bmp;
-        }
-
-        void holst_resize(MouseEventArgs e)
-        {
-            pictureBox1.Width=pictureBox1.Width+e.X-pictureBox1.Location.X;
-        }
 
 
         private Bitmap filling(Bitmap sourceImage, int x, int y, Color fillColor, Color borderColor)
@@ -789,10 +696,10 @@ namespace My_paint
                 image.SetPixel(px, py, fillColor);
 
                 // Добавляем соседние пиксели в стек
-                points.Push(new Point(px, py + 1)); // Вверх
-                points.Push(new Point(px + 1, py)); // Вправо
-                points.Push(new Point(px, py - 1)); // Вниз
-                points.Push(new Point(px - 1, py)); // Влево
+                points.Push(new Point(px, py + 1)); 
+                points.Push(new Point(px + 1, py)); 
+                points.Push(new Point(px, py - 1));
+                points.Push(new Point(px - 1, py)); 
             }
 
             return image;
@@ -812,13 +719,8 @@ namespace My_paint
                 {
                     full_name_of_image = open_dialog.FileName;
                     image = new Bitmap(open_dialog.FileName);
-                    //this.pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-                    //this.Width = pictureBox1.Width;
-                    //this.Height = pictureBox1.Height;
-                    //this.pictureBox1.Size = image.Size;
                     pictureBox1.Image = image;
-                    pictureBox1.Invalidate(); //????
-                    //получение матрицы с пикселями
+                    pictureBox1.Invalidate(); 
                     pixel = new UInt32[image.Height, image.Width];
                     for (int y = 0; y < image.Height; y++)
                         for (int x = 0; x < image.Width; x++)
@@ -936,6 +838,26 @@ namespace My_paint
             image.SetPixel(y, x, Color.FromArgb((int)pixel));
         }
 
+        private ToolTip toolTip1;
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            toolTip1 = new ToolTip
+            {
+                AutoPopDelay = 5000,
+                InitialDelay = 1000,
+                ReshowDelay = 500,
+                ShowAlways = true
+            };
+
+            toolTip1.SetToolTip(button3, "Рисование");
+            toolTip1.SetToolTip(button4, "Нарисовать четырехугольник");
+            toolTip1.SetToolTip(button5, "Нарисовать окружность");
+            toolTip1.SetToolTip(button9, "Нарисовать треугольник");
+            toolTip1.SetToolTip(button8, "Заливка");
+            toolTip1.SetToolTip(button11, "Применить");
+        }
 
     }
 

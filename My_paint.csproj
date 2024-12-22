@@ -119,5 +119,35 @@
   <ItemGroup>
     <None Include="Resources\poli.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\el1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\el2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\el3.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\reg.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\reg2.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zal1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pen1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ok.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ok1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ok2.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

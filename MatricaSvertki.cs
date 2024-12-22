@@ -67,12 +67,18 @@ namespace My_paint
                             ColorOfPixel.B += ColorOfCell.B;
                         }
                     //контролируем переполнение переменных
-                    if (ColorOfPixel.R < 0) ColorOfPixel.R = 0;
-                    if (ColorOfPixel.R > 255) ColorOfPixel.R = 255;
-                    if (ColorOfPixel.G < 0) ColorOfPixel.G = 0;
-                    if (ColorOfPixel.G > 255) ColorOfPixel.G = 255;
-                    if (ColorOfPixel.B < 0) ColorOfPixel.B = 0;
-                    if (ColorOfPixel.B > 255) ColorOfPixel.B = 255;
+                    if (ColorOfPixel.R < 0) 
+                        ColorOfPixel.R = 0;
+                    if (ColorOfPixel.R > 255) 
+                        ColorOfPixel.R = 255;
+                    if (ColorOfPixel.G < 0) 
+                        ColorOfPixel.G = 0;
+                    if (ColorOfPixel.G > 255) 
+                        ColorOfPixel.G = 255;
+                    if (ColorOfPixel.B < 0) 
+                        ColorOfPixel.B = 0;
+                    if (ColorOfPixel.B > 255)
+                        ColorOfPixel.B = 255;
 
                     newpixel[i - gap, j - gap] = build(ColorOfPixel);
                 }
@@ -90,7 +96,6 @@ namespace My_paint
             return Color;
         }
 
-        //сборка каналов
         public static UInt32 build(RGB ColorOfPixel)
         {
             UInt32 Color;

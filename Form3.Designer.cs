@@ -63,24 +63,27 @@
             // label1
             // 
             this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label1.Location = new System.Drawing.Point(44, 42);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(61, 16);
+            this.label1.Size = new System.Drawing.Size(60, 16);
             this.label1.TabIndex = 2;
             this.label1.Text = "Яркость";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label2.Location = new System.Drawing.Point(44, 164);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(105, 16);
+            this.label2.Size = new System.Drawing.Size(103, 16);
             this.label2.TabIndex = 3;
             this.label2.Text = "Контрастность";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label3.Location = new System.Drawing.Point(102, 68);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(25, 16);
@@ -90,6 +93,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label4.Location = new System.Drawing.Point(102, 200);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(25, 16);
@@ -99,6 +103,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label5.Location = new System.Drawing.Point(386, 68);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(21, 16);
@@ -108,6 +113,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Arial", 7.8F, System.Drawing.FontStyle.Bold);
             this.label6.Location = new System.Drawing.Point(386, 200);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(21, 16);
@@ -116,20 +122,22 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(207, 111);
+            this.button1.BackgroundImage = global::My_paint.Properties.Resources.ok2;
+            this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.button1.Location = new System.Drawing.Point(241, 112);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(89, 23);
+            this.button1.Size = new System.Drawing.Size(35, 27);
             this.button1.TabIndex = 8;
-            this.button1.Text = "Применить";
             this.button1.UseVisualStyleBackColor = true;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(207, 262);
+            this.button2.BackgroundImage = global::My_paint.Properties.Resources.ok2;
+            this.button2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.button2.Location = new System.Drawing.Point(241, 262);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(89, 23);
+            this.button2.Size = new System.Drawing.Size(35, 27);
             this.button2.TabIndex = 9;
-            this.button2.Text = "Применить";
             this.button2.UseVisualStyleBackColor = true;
             // 
             // Form3
