@@ -8,7 +8,6 @@ namespace My_paint
 {
     class BrightnessContrast
     {
-        //якрость
             public static UInt32 Brightness(UInt32 point, int poz, int lenght)
             {
             int R;
@@ -21,7 +20,6 @@ namespace My_paint
             G = (int)(((point & 0x0000FF00) >> 8) + N * 128 / 100);
             B = (int)((point & 0x000000FF) + N * 128 / 100);
 
-            //контролируем переполнение переменных
             if (R < 0) R = 0;
             if (R > 255) R = 255;
             if (G < 0) G = 0;
@@ -34,14 +32,13 @@ namespace My_paint
             return point;
             }
 
-    //контрастность
         public static UInt32 Contrast(UInt32 point, int poz, int lenght)
         {
             int R;
             int G;
             int B;
 
-            int N = (100 / lenght) * poz; //кол-во процентов
+            int N = (100 / lenght) * poz; 
 
             if (N >= 0)
             {
@@ -57,7 +54,6 @@ namespace My_paint
                 B = (int)(((point & 0x000000FF) * (100 - (-N)) + 128 * (-N)) / 100);
             }
 
-            //контролируем переполнение переменных
             if (R < 0) R = 0;
             if (R > 255) R = 255;
             if (G < 0) G = 0;

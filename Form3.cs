@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace My_paint
@@ -23,8 +16,6 @@ namespace My_paint
             this.FormClosing += new FormClosingEventHandler(Form2Closing);
         }
 
-
-        //сохранение изменений яркости или контрастности
         private void button_Click(object sender, EventArgs e)
         {
 
@@ -37,14 +28,10 @@ namespace My_paint
                 trackBar2.Value = 0;
             }
         }
-
-        //вывод изображения на экран
         void FromBitmapToScreen()
         {
             OwnerForm.FromBitmapToScreen();
         }
-
-        //обновление изображения в Bitmap и pictureBox при закрытии окна
         private void Form2Closing(object sender, System.EventArgs e)
         {
             if (Form1.full_name_of_image != "\0")

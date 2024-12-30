@@ -1,27 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
-using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Image = System.Drawing.Image;
-using TextBox = System.Windows.Forms.TextBox;
 using ToolTip = System.Windows.Forms.ToolTip;
 
 namespace My_paint
 {
     
-
-
     public partial class Form1 : Form
     {
         class DraggedFragment
@@ -117,6 +104,12 @@ namespace My_paint
             col = Color.FromArgb(col.A, col.R, trackBar2.Value, col.B);
             label7.BackColor = col;
         }
+
+        private void trackBar3_Scroll(object sender, EventArgs e)
+        {
+            col = Color.FromArgb(col.A, col.R, col.G, trackBar3.Value);
+            label7.BackColor = col;
+        }
         private void trackBar4_Scroll(object sender, EventArgs e)
         {
             col = Color.FromArgb(trackBar4.Value, col.R, col.G, col.B);
@@ -141,6 +134,11 @@ namespace My_paint
             label7.BackColor = col;
         }
 
+        private void trackBar6_Scroll(object sender, EventArgs e)
+        {
+            pen_size = trackBar6.Value;
+        }
+
         private void сщхранитьКакToolStripMenuItem_Click(object sender, EventArgs e)
         {
             save();
@@ -149,52 +147,48 @@ namespace My_paint
         {
             open();
         }
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        /// буффер 
+
+        private void сохранитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            save_new();
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            if (buf.Count >1)
+            // Кнопка "Назад"
+            if (buf.Count > 1)
             {
-                buf2.Push(buf.Pop());
-                pictureBox1.Image = (Bitmap)buf.Pop().Clone();
-                panel1.Controls.Remove(panel1.Controls[panel1.Controls.Count - 1]);
+                buf2.Push(buf.Pop()); 
+                pictureBox1.Image = (Bitmap)buf.Peek().Clone(); 
+                panel1.Controls.Remove(panel1.Controls[panel1.Controls.Count - 1]); 
             }
         }
-
-        private void trackBar6_Scroll(object sender, EventArgs e)
-        {
-            pen_size=trackBar6.Value;
-        }
-
-
-        private void trackBar3_Scroll(object sender, EventArgs e)
-        {
-            col = Color.FromArgb(col.A, col.R, col.G, trackBar3.Value);
-            label7.BackColor = col;
-        }
-
-
         private void button2_Click(object sender, EventArgs e)
         {
-            if (buf2.Count >0)
+            // Кнопка "Вперед"
+            if (buf2.Count > 0)
             {
-                buf.Push(buf2.Pop());
-                pictureBox1.Image= (Bitmap)buf.Pop().Clone();
-                ToBufer(buf.Count);
+                var newImage = (Bitmap)buf2.Pop().Clone(); 
+                buf.Push(newImage); 
+
+                pictureBox1.Image = (Bitmap)newImage.Clone();
+
+                PictureBox pic = new PictureBox
+                {
+                    Location = new Point(10, panel1.Controls.Count * 66),
+                    Width = 65,
+                    Height = 42,
+                    Image = resizeImage(newImage, new Size(65, 42))
+                };
+
+                panel1.Controls.Add(pic);
             }
         }
 
-        /////////////////////////////////////////////////////////////////////////////////////////////
-        /// палитра
-        private void pictureBox2_MouseDown(object sender, MouseEventArgs e)
-        {
-            chcol = true;
-            colbitmap = new Bitmap(pictureBox2.Image);
-        }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            intr= 1;
+            intr = 1;
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -207,14 +201,43 @@ namespace My_paint
             intr = 3;
         }
 
-        private void pictureBox2_MouseUp(object sender, MouseEventArgs e)
-        {
-            chcol = false;
-        }
-
         private void button6_Click(object sender, EventArgs e)
         {
             intr = 4;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            intr = 6;
+            border = col;
+        }
+        private void button9_Click(object sender, EventArgs e)
+        {
+            intr = 7;
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            if (fontDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                textBox3.Font = fontDialog1.Font;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            userText = textBox3.Text;
+            intr = 11;
+        }
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        /// палитра
+        private void pictureBox2_MouseDown(object sender, MouseEventArgs e)
+        {
+            chcol = true;
+            colbitmap = new Bitmap(pictureBox2.Image);
+        }
+
+        private void pictureBox2_MouseUp(object sender, MouseEventArgs e)
+        {
+            chcol = false;
         }
 
         private void pictureBox2_MouseClick(object sender, MouseEventArgs e)
@@ -250,7 +273,6 @@ namespace My_paint
             ncol = col;
             label7.BackColor = col;
         }
-
         private void чернобелыйToolStripMenuItem_Click(object sender, EventArgs e)
         {
             bmp = (Bitmap)pictureBox1.Image.Clone();
@@ -259,7 +281,6 @@ namespace My_paint
                 for (int j=0; j<bmp.Height;++j)
                 {
                     UInt32 pixel = (UInt32)(bmp.GetPixel(i, j).ToArgb());
-                    // получаем компоненты цветов пикселя
                     float R = (float)((pixel & 0x00FF0000) >> 16); 
                     float G = (float)((pixel & 0x0000FF00) >> 8); 
                     float B = (float)(pixel & 0x000000FF);
@@ -273,18 +294,6 @@ namespace My_paint
             buf.Push((Bitmap)pictureBox1.Image.Clone());
             ToBufer(buf.Count);
         }
-
-        private void button8_Click(object sender, EventArgs e)
-        {
-            intr = 6;
-            border = col;
-        }
-
-        private void сохранитьToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            save_new();
-        }
-
         private void сепияToolStripMenuItem_Click(object sender, EventArgs e)
         {
             bmp = (Bitmap)pictureBox1.Image.Clone();
@@ -298,10 +307,8 @@ namespace My_paint
                     float B = (float)(pixel & 0x000000FF);     
                     int grayScale = (int)((R * .3) + (G * .59) + (B * .11));
 
-                    // create the color object
                     Color newColor = Color.FromArgb(grayScale, grayScale, grayScale);
 
-                    // now apply a sepia filter
                     R = newColor.R * 1;
                     G = newColor.G * 0.95f;
                     B = newColor.B * 0.82f;
@@ -314,29 +321,58 @@ namespace My_paint
             buf.Push((Bitmap)pictureBox1.Image.Clone());
             ToBufer(buf.Count);
         }
+        private void каналыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
 
+            Form2 ColorBalanceForm = new Form2(this);
+            ColorBalanceForm.ShowDialog();
+        }
+        private void яркостьКонтрастностьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form3 BrightnessForm = new Form3(this);
+            BrightnessForm.ShowDialog();
+        }
+        private void повышениеРезкостиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (full_name_of_image != "\0")
+            {
+                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N1, Filter.sharpness);
+                FromPixelToBitmap();
+                FromBitmapToScreen();
+                pictureBox1.Image = (Bitmap)image.Clone();
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
+            }
+        }
+        private void размытьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (full_name_of_image != "\0")
+            {
+                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N2, Filter.blur);
+                FromPixelToBitmap();
+                FromBitmapToScreen();
+                pictureBox1.Image = (Bitmap)image.Clone();
+                buf.Push((Bitmap)pictureBox1.Image.Clone());
+                ToBufer(buf.Count);
+            }
+        }
         public static void FromPixelToBitmap()
         {
             for (int y = 0; y < image.Height; y++)
                 for (int x = 0; x < image.Width; x++)
                     image.SetPixel(x, y, Color.FromArgb((int)pixel[y, x]));
         }
-
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
             
-            //если есть сдвигаемый фрагмент
             if (draggedFragment != null)
             {
-                //рисуем вырезанное белое место
                 e.Graphics.SetClip(draggedFragment.SourceRect);
                 e.Graphics.Clear(Color.White);
 
-                //рисуем сдвинутый фрагмент
                 e.Graphics.SetClip(draggedFragment.Rect);
                 e.Graphics.DrawImage(pictureBox1.Image, draggedFragment.Location.X - draggedFragment.SourceRect.X, draggedFragment.Location.Y - draggedFragment.SourceRect.Y);
 
-                //рисуем рамку
                 e.Graphics.ResetClip();
                 ControlPaint.DrawFocusRectangle(e.Graphics, draggedFragment.Rect);
             }
@@ -347,18 +383,6 @@ namespace My_paint
             }
             
         }
-
-        private void button9_Click(object sender, EventArgs e)
-        {
-            intr = 7;
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-            userText = textBox3.Text;
-            intr = 11;
-        }
-
         /////////////////////////////////////////////////////////////////////////////////////////////
         /// события на холсте
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
@@ -384,7 +408,6 @@ namespace My_paint
                     case 4:
                         if (e.Button == MouseButtons.Left)
                         {
-                            //юзер тянет фрагмент?
                             if (draggedFragment != null)
                             {
                                 //сдвигаем фрагмент
@@ -405,9 +428,9 @@ namespace My_paint
                         draw_polygon(oldMouse.X, oldMouse.Y, e.X, e.Y);
                         break;
                     case 11:
-                        if (!string.IsNullOrEmpty(userText)) // Если текст установлен
+                        if (!string.IsNullOrEmpty(userText)) 
                         {
-                            draw_text(userText, e.X, e.Y); // Рисуем текст по координатам клика
+                            draw_text(userText, e.X, e.Y); 
                         }
                         break;
 
@@ -418,20 +441,6 @@ namespace My_paint
                 y1 = e.Y;
             }
         }
-
-        private void button10_Click(object sender, EventArgs e)
-        {
-            if (fontDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                textBox3.Font = fontDialog1.Font;
-        }
-
-        private void каналыToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
-            Form2 ColorBalanceForm = new Form2(this);
-            ColorBalanceForm.ShowDialog();
-        }
-
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
             buf2.Clear();
@@ -446,7 +455,6 @@ namespace My_paint
             bmp = (Bitmap)bitmap.Clone();
             if (intr==4)
             {
-                //юзер кликнул мышью мимо фрагмента?
                 if (draggedFragment != null && !draggedFragment.Rect.Contains(e.Location))
                 {
                     draggedFragment = null;
@@ -462,53 +470,18 @@ namespace My_paint
                 float stretch_x = colbitmap.Width / (float)pictureBox1.Width;
                 float stretch_y = colbitmap.Height / (float)pictureBox1.Height;
                 fill_col = colbitmap.GetPixel((int)(e.X * stretch_x), (int)(e.Y * stretch_y));
-                bmp = filling(bitmap, e.X, e.Y, col, border);
+                bmp = filling(bitmap, e.X, e.Y, col);
                 pictureBox1.Image=(Bitmap)bmp.Clone();
                 
             }
 
         }
-
-        private void яркостьКонтрастностьToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Form3 BrightnessForm = new Form3(this);
-            BrightnessForm.ShowDialog();
-        }
-
-        private void повышениеРезкостиToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (full_name_of_image != "\0")
-            {
-                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N1, Filter.sharpness);
-                FromPixelToBitmap();
-                FromBitmapToScreen();
-                pictureBox1.Image = (Bitmap)image.Clone();
-                buf.Push((Bitmap)pictureBox1.Image.Clone());
-                ToBufer(buf.Count);
-            }
-        }
-
-        private void размытьToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (full_name_of_image != "\0")
-            {
-                pixel = Filter.matrix_filtration(image.Width, image.Height, pixel, Filter.N2, Filter.blur);
-                FromPixelToBitmap();
-                FromBitmapToScreen();
-                pictureBox1.Image = (Bitmap)image.Clone();
-                buf.Push((Bitmap)pictureBox1.Image.Clone());
-                ToBufer(buf.Count);
-            }
-        }
-
         private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
             if (intr == 4)
             {
-                //пользователь выделил фрагмент и отпустил мышь?
                 if (mousePos1 != mousePos2)
                 {
-                    //создаем DraggedFragment
                     var rect = GetRect(mousePos1, mousePos2);
                     draggedFragment = new DraggedFragment() { SourceRect = rect, Location = rect.Location };
                 }
@@ -533,7 +506,6 @@ namespace My_paint
                 ToBufer(buf.Count);
             }
         }
-
         /////////////////////////////////////////////////////////////////////////////////////////
         /// действия
         void draw_pen(int x0, int y0, int x1, int y1, int x2, int y2)
@@ -579,7 +551,6 @@ namespace My_paint
             graph.DrawRectangle(pen, x1, y1, x2, y2);
             pictureBox1.Image = bmp;
         }
-
         void draw_ellipse(int x1, int y1, int x2, int y2)
         {
             int tmp;
@@ -611,7 +582,6 @@ namespace My_paint
             graph.DrawEllipse(pen, x1, y1, x2, y2);
             pictureBox1.Image = bmp;
         }
-
         void draw_polygon(int x1, int y1, int x2, int y2)
         {
             bmp = (Bitmap)bitmap.Clone();
@@ -632,7 +602,6 @@ namespace My_paint
                 y2 = tmp;
             }
 
-            // Расчёт координат третьей вершины
             int x3 = x1 + (x2 - x1) / 2; 
             int y3 = y1 - (y2 - y1); 
 
@@ -647,7 +616,6 @@ namespace My_paint
 
             pictureBox1.Image = bmp;
         }
-
         void draw_text(string text, int x, int y)
         {
             bmp = (Bitmap)bitmap.Clone(); 
@@ -656,22 +624,18 @@ namespace My_paint
             graph.DrawString(text, textBox3.Font, brush, x, y); 
             pictureBox1.Image = bmp; 
         }
-
-
-
-        private Bitmap filling(Bitmap sourceImage, int x, int y, Color fillColor, Color borderColor)
+        private Bitmap filling(Bitmap sourceImage, int x, int y, Color fillColor)
         {
             Bitmap image = (Bitmap)sourceImage.Clone();
             Stack<Point> points = new Stack<Point>();
             points.Push(new Point(x, y));
 
-            // Проверяем, что начальная точка внутри изображения
             if (x < 0 || x >= image.Width || y < 0 || y >= image.Height)
                 return image;
 
-            // Получаем исходный цвет заливки (чтобы не перезаполнять область)
             Color targetColor = image.GetPixel(x, y);
-            if (targetColor.ToArgb() == fillColor.ToArgb() || targetColor.ToArgb() == borderColor.ToArgb())
+
+            if (targetColor.ToArgb() == fillColor.ToArgb())
                 return image;
 
             while (points.Count > 0)
@@ -681,34 +645,28 @@ namespace My_paint
                 int px = currentPoint.X;
                 int py = currentPoint.Y;
 
-                // Проверяем, что текущая точка внутри изображения
                 if (px < 0 || px >= image.Width || py < 0 || py >= image.Height)
                     continue;
 
-                // Получаем текущий цвет пикселя
                 Color currentColor = image.GetPixel(px, py);
 
-                // Если пиксель не подходит для заливки, пропускаем его
-                if (currentColor.ToArgb() == fillColor.ToArgb() || currentColor.ToArgb() == borderColor.ToArgb())
+                if (currentColor.ToArgb() != targetColor.ToArgb())
                     continue;
 
-                // Закрашиваем текущий пиксель
                 image.SetPixel(px, py, fillColor);
 
-                // Добавляем соседние пиксели в стек
+                // Добавляем соседние точки в стек
                 points.Push(new Point(px, py + 1)); 
                 points.Push(new Point(px + 1, py)); 
-                points.Push(new Point(px, py - 1));
+                points.Push(new Point(px, py - 1)); 
                 points.Push(new Point(px - 1, py)); 
             }
 
             return image;
         }
 
-
         /////////////////////////////////////////////////////////////////////////////////////
         /// работа с файлами
-
         public void open()
         {
             OpenFileDialog open_dialog = new OpenFileDialog();
@@ -767,20 +725,16 @@ namespace My_paint
 
             }
         }
-
         public void save_new()
         {
             if (pictureBox1.Image != null)
             {
                 try
                 {
-                    // Путь к рабочему столу
                     string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-                    // Фиксированное имя файла
                     string filePath = Path.Combine(desktopPath, "SavedImage.png");
 
-                    // Сохраняем изображение в формате PNG
                     pictureBox1.Image.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
 
                     MessageBox.Show("Изображение сохранено на рабочий стол: " + filePath,
